@@ -14,6 +14,11 @@ import {
   ComicTags,
 } from 'vanaheim-shared';
 
+interface BufferCache {
+  id: string;
+  buffer: Buffer;
+}
+let cache: BufferCache | null = null;
 export default class ComicController extends Controller {
   async tags() {
     const { ctx } = this;
@@ -53,19 +58,23 @@ export default class ComicController extends Controller {
       return;
     }
     try {
-      const comic = await ctx.service.comic.getComicPath(id);
-      const { comicPath } = comic;
-      const stat = await fs.stat(comicPath);
-      const { size } = stat;
       ctx.set('Server', `ComicGlassMediaServer/1.0`);
+      if (!cache || cache.id !== id) {
+        const comic = await ctx.service.comic.getComicPath(id);
+        const { comicPath } = comic;
+        cache = {
+          id,
+          buffer: await fs.readFile(comicPath),
+        };
+      }
       if (this.ctx.request.method === 'HEAD') {
         ctx.status = 206;
         ctx.set('Content-Length', `9`);
-        ctx.set('Content-Range', `bytes 0-8/${size}`);
+        ctx.set('Content-Range', `bytes 0-8/${cache.buffer.length}`);
         return;
       }
-      ctx.set('Content-Length', `${size}`);
-      ctx.body = fs.createReadStream(comicPath);
+      ctx.set('Content-Length', `${cache.buffer.length}`);
+      ctx.body = cache.buffer;
     } catch (error) {
       ctx.status = 401;
       ctx.body = {
