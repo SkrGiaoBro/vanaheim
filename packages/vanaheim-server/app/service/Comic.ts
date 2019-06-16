@@ -3,6 +3,7 @@ import { Service } from 'egg';
 import { fs } from 'mz';
 import { join } from 'path';
 import * as mongoose from 'mongoose';
+import { NotFoundRequestError } from '../common/error';
 
 export default class ComicService extends Service {
   async add(comic: Partial<AddComicFormInfo>, cover: string) {
@@ -38,17 +39,17 @@ export default class ComicService extends Service {
       _id: id,
     });
     if (!comic) {
-      throw new Error('漫画不存在');
+      throw new NotFoundRequestError('漫画不存在');
     }
     const workspaceId = comic.workspaceId;
     const workspace = await this.ctx.model.Workspace.findById({
       _id: workspaceId,
     });
     if (!workspace) {
-      throw new Error('仓库不存在');
+      throw new NotFoundRequestError('仓库不存在');
     }
     if (!(await fs.exists(workspace.path))) {
-      throw new Error('找不到仓库所在文件夹');
+      throw new NotFoundRequestError('找不到仓库所在文件夹');
     }
     const deleted = join(workspace.path, 'deleted');
     if (!(await fs.exists(deleted))) {
@@ -62,7 +63,7 @@ export default class ComicService extends Service {
     const files = await fs.readdir(comicDirPath);
     const comicName = files.find(o => o.endsWith('.zip'));
     if (!comicName) {
-      throw new Error('压缩文件丢失');
+      throw new NotFoundRequestError('压缩文件丢失');
     }
     return {
       tempPath: join(temp, comic.id),

@@ -52,7 +52,9 @@ export const groupTagsTagsSet = getTagData(['group']);
 export const groupTags = Array.from(groupTagsTagsSet.values());
 
 export const languageTagsSet = getTagData(['language']);
-export const languageTags = Array.from(languageTagsSet.values());
+export const languageTags = Array.from(languageTagsSet.values()).filter(({ key }) =>
+  ['chinese', 'rewrite', 'text cleaned', 'speechless', 'japanese', 'english'].includes(key)
+);
 
 export const getTagName = (map: Map<string, Tag>, key: string) => {
   const tag = map.get(key);

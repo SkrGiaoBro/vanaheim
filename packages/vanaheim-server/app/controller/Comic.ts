@@ -1,3 +1,4 @@
+import { BadRequestError, NotFoundRequestError } from './../common/error';
 import { GetComicTagsQuery } from './../../../vanaheim-shared/src/model/comic';
 import { Controller } from 'egg';
 import { zip } from 'compressing';
@@ -13,12 +14,9 @@ import {
   AddComicFormInfo,
   ComicTags,
 } from 'vanaheim-shared';
+import * as LRUCache from 'lru-cache';
 
-interface BufferCache {
-  id: string;
-  buffer: Buffer;
-}
-let cache: BufferCache | null = null;
+let comicCache = new LRUCache<string, Buffer>({ max: 1, maxAge: 3600000 });
 export default class ComicController extends Controller {
   async tags() {
     const { ctx } = this;
@@ -51,36 +49,24 @@ export default class ComicController extends Controller {
       params: { id },
     } = ctx;
     if (!id) {
-      ctx.status = 401;
-      ctx.body = {
-        message: '参数错误，缺少 ID',
-      };
+      throw new BadRequestError('参数错误，缺少 ID');
+    }
+    ctx.set('Server', `ComicGlassMediaServer/1.0`);
+    let buffer = comicCache.get(id);
+    if (!buffer) {
+      const comic = await ctx.service.comic.getComicPath(id);
+      const { comicPath } = comic;
+      buffer = await fs.readFile(comicPath);
+      comicCache.set(id, buffer);
+    }
+    if (this.ctx.request.method === 'HEAD') {
+      ctx.status = 206;
+      ctx.set('Content-Length', `9`);
+      ctx.set('Content-Range', `bytes 0-8/${buffer.length}`);
       return;
     }
-    try {
-      ctx.set('Server', `ComicGlassMediaServer/1.0`);
-      if (!cache || cache.id !== id) {
-        const comic = await ctx.service.comic.getComicPath(id);
-        const { comicPath } = comic;
-        cache = {
-          id,
-          buffer: await fs.readFile(comicPath),
-        };
-      }
-      if (this.ctx.request.method === 'HEAD') {
-        ctx.status = 206;
-        ctx.set('Content-Length', `9`);
-        ctx.set('Content-Range', `bytes 0-8/${cache.buffer.length}`);
-        return;
-      }
-      ctx.set('Content-Length', `${cache.buffer.length}`);
-      ctx.body = cache.buffer;
-    } catch (error) {
-      ctx.status = 401;
-      ctx.body = {
-        message: error.message,
-      };
-    }
+    ctx.set('Content-Length', `${buffer.length}`);
+    ctx.body = buffer;
   }
 
   public async list() {
@@ -99,16 +85,14 @@ export default class ComicController extends Controller {
   }
 
   public async delete() {
-    const { ctx } = this;
     const {
-      params: { id },
-    } = ctx;
+      ctx,
+      ctx: {
+        params: { id },
+      },
+    } = this;
     if (!id) {
-      ctx.status = 401;
-      ctx.body = {
-        message: '参数错误，缺少 ID',
-      };
-      return;
+      throw new BadRequestError('参数错误，缺少 ID');
     }
     const comic = await this.service.comic.deleteById(id);
     ctx.body = {
@@ -117,19 +101,18 @@ export default class ComicController extends Controller {
   }
 
   public async cover() {
-    const { ctx } = this;
-    const id = ctx.params.id;
+    const {
+      ctx,
+      ctx: {
+        params: { id },
+      },
+    } = this;
     if (!id) {
-      ctx.status = 404;
-      return;
+      throw new BadRequestError('参数错误，缺少 ID');
     }
     const comic = await this.service.comic.findById(id);
     if (!comic) {
-      ctx.status = 401;
-      ctx.body = {
-        message: '漫画不存在',
-      };
-      return;
+      throw new NotFoundRequestError('漫画不存在');
     }
     ctx.set('Content-type', 'image/jpg');
     ctx.body = comic.cover;
