@@ -2,6 +2,7 @@ import { Action } from 'dva-model-creator';
 
 export const dva = {
   config: {
+    namespacePrefixWarning: false,
     onError(err: ErrorEvent) {
       err.preventDefault();
       console.error(err.message);

@@ -12,10 +12,8 @@ const mapStateToProps = ({ bookshelf }: GlobalState) => ({ bookshelf });
 type PageStateProps = ReturnType<typeof mapStateToProps>;
 type PageProps = PageStateProps & UmiComponentProps & FormComponentProps;
 
-const page: React.FC<PageProps> = ({ history, dispatch, bookshelf: { detail } }) => {
-  const match = routerRedux.createMatchSelector('/comic/bookshelf/:id')({
-    router: { location: history.location },
-  });
+const page: React.FC<PageProps> = ({ history: router, dispatch, bookshelf: { detail } }) => {
+  const match = routerRedux.createMatchSelector('/comic/bookshelf/:id')({ router });
   if (!match) {
     return <div />;
   }
