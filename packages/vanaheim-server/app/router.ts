@@ -10,6 +10,8 @@ export default (app: Application) => {
   router.get('/api/v1/bookshelves/:id', controller.bookshelf.detail);
   router.post('/api/v1/bookshelves/:id/comics', controller.bookshelf.addComic);
   router.delete('/api/v1/bookshelves/:id/comics', controller.bookshelf.removeComic);
+  router.get('/comicGlass', controller.comicGlass.list);
+  router.get('/comicGlass/:id', controller.comicGlass.getById);
 
   router.post('/api/v1/workspace', controller.workspace.add);
   router.get('/api/v1/workspace', controller.workspace.list);

@@ -25,7 +25,7 @@ const page: React.FC<PageProps> = ({ history, dispatch, bookshelf: { detail } })
     return function clean() {
       dispatch(cleanBookshelfDetail());
     };
-  }, []);
+  }, [id]);
   if (!detail) {
     return <div />;
   }
