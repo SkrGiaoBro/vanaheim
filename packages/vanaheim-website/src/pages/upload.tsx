@@ -48,6 +48,7 @@ const TagMap: {
   标题: 'title',
   团体: 'group',
   作者: 'artist',
+  年份: 'year',
 };
 
 class UploadPage extends React.PureComponent<PageProps, UploadPageState> {
@@ -150,7 +151,7 @@ class UploadPage extends React.PureComponent<PageProps, UploadPageState> {
         foo[TagMap[key]] = titleInfo[key];
       }
     }
-    let { group, title, titleOriginal, parody, artist } = foo;
+    let { group, title, titleOriginal, parody, artist, year } = foo;
     if (titleOriginal && !title) {
       title = titleOriginal;
     }
@@ -165,6 +166,7 @@ class UploadPage extends React.PureComponent<PageProps, UploadPageState> {
       group,
       artist: artist ? [artist] : [],
       parody: parody ? [parody] : [],
+      tags: year ? [year] : [],
       workspaceId,
     };
   }
@@ -222,7 +224,9 @@ class UploadPage extends React.PureComponent<PageProps, UploadPageState> {
           })(<TagSelect multiple tags={parodyTags} />)}
         </Form.Item>
         <Form.Item label="标签">
-          {form.getFieldDecorator('tags')(<TagSelect multiple tags={tags} />)}
+          {form.getFieldDecorator('tags', {
+            initialValue: initData.tags,
+          })(<TagSelect multiple tags={tags} />)}
         </Form.Item>
         <Form.Item label="仓库">
           {form.getFieldDecorator('workspaceId', {
@@ -385,7 +389,7 @@ class UploadPage extends React.PureComponent<PageProps, UploadPageState> {
           <ComicImporter
             onSelect={this.handleSelect}
             className={style.fileSelect}
-            pattern={['[作者]原文标题', '[团体(作者)]原文标题']}
+            pattern={['(年份)[团体(作者)]原文标题', '[团体(作者)]原文标题', '[作者]原文标题']}
           />
         ) : (
           <React.Fragment>

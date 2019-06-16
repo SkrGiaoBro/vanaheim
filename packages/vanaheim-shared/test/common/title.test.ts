@@ -59,6 +59,19 @@ describe('test parseTitle', () => {
     );
 
     assert.deepEqual(
+      {
+        year: 'C84',
+        title: 'アマゾネスさんと強制孕ませセックス',
+        author: 'ユキバスターZ',
+        group: 'コドモビール',
+      },
+      parseTitle(
+        '(C84) [コドモビール (ユキバスターZ)] アマゾネスさんと強制孕ませセックス',
+        pattern
+      )
+    );
+
+    assert.deepEqual(
       { title: 'ハナとテツロウ', group: 'ユースケ' },
       parseTitle('[ユースケ]ハナとテツロウ（Sample）', pattern)
     );
