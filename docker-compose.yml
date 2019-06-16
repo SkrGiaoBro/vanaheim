@@ -1,0 +1,12 @@
+version: '3'
+services:
+  web:
+    image: 'diamondyuan/vanaheim'
+    restart: always
+    ports:
+      - '9999:8000'
+      - '9998:7001'
+    environment:
+      MONGODB_URL: db:27017
+  mongo:
+    image: 'mongo:latest'

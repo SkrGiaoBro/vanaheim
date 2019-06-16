@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "tsc -w",
+    "build": "tsc",
     "test": "egg-bin test",
     "fetchData": "bash scripts/fetchData.sh"
   },
