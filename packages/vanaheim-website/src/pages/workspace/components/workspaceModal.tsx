@@ -31,7 +31,7 @@ function renderTreeData(treeData: TreeNodeNormal[]) {
 
 class CreateForm extends React.PureComponent<ModelProps> {
   componentDidMount() {
-    this.props.dispatch(asyncListFile('/Users/'));
+    this.props.dispatch(asyncListFile(process.env.WORKSPACE_ROOT || '/Users/'));
   }
 
   okHandle = () => {
