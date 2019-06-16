@@ -1,5 +1,7 @@
 # Vanaheim
 
+comic manager
+
 ## How to run
 
 ### Install mongodb
