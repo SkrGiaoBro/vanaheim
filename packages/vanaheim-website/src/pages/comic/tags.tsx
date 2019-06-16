@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect } from 'react';
 
 import TagSelector from '@/components/TagSelector';
 import StandardFormRow from '@/components/StandardFormRow';
@@ -32,32 +32,29 @@ function getTagsFromHistory(history: History): TagType[] {
   return [tags];
 }
 
-class TagsPage extends Component<PageProps> {
-  componentDidMount = () => {
-    const { dispatch, history, form } = this.props;
+export const TagsPage: React.FC<PageProps> = ({
+  dispatch,
+  history,
+  comic,
+  workspace,
+  form,
+  form: { getFieldDecorator },
+}) => {
+  const tagsType = getTagsFromHistory(history);
+  useEffect(() => {
     dispatch(
       asyncFetchTags.started({
         tagTypes: getTagsFromHistory(history),
         selectTags: form.getFieldsValue(),
       })
     );
-    dispatch(
-      asyncGetComic({
-        offset: 0,
-      })
-    );
-  };
+    dispatch(asyncGetComic({}));
+    return function clean() {
+      dispatch(setList([]));
+    };
+  }, [tagsType.join(',')]);
 
-  componentWillUnmount = () => {
-    this.props.dispatch(setList([]));
-  };
-
-  renderTag = (tag: TagType, last: boolean) => {
-    const {
-      comic,
-      workspace,
-      form: { getFieldDecorator },
-    } = this.props;
+  const renderTag = (tag: TagType, last: boolean) => {
     const tagsCount = comic.tags[tag] || [];
     const tagInfo = tagInfoMap[tag];
     if (!tagInfo || tagsCount.length === 0) {
@@ -88,33 +85,30 @@ class TagsPage extends Component<PageProps> {
     );
   };
 
-  render() {
-    const { comic, history } = this.props;
-    const tags: TagType[] = getTagsFromHistory(history);
-    return (
-      <React.Fragment>
-        <Card style={{ marginBottom: 24 }}>
-          <Form>{tags.map((tag, index) => this.renderTag(tag, index === tags.length - 1))}</Form>
-        </Card>
-        <Card>
-          <Row gutter={20} type="flex">
-            {comic.list.map(o => (
-              <Col key={o.id} xs={12} md={8} lg={6} xl={4}>
-                <ContextMenu comicId={o.id}>
-                  <div
-                    className={styles.cover}
-                    style={{ backgroundImage: `url(/server-static/cover/${o.id})` }}
-                  />
-                </ContextMenu>
-                <p>{o.title}</p>
-              </Col>
-            ))}
-          </Row>
-        </Card>
-      </React.Fragment>
-    );
-  }
-}
+  const tags: TagType[] = getTagsFromHistory(history);
+  return (
+    <React.Fragment>
+      <Card style={{ marginBottom: 24 }}>
+        <Form>{tags.map((tag, index) => renderTag(tag, index === tags.length - 1))}</Form>
+      </Card>
+      <Card>
+        <Row gutter={20} type="flex">
+          {comic.list.map(o => (
+            <Col key={o.id} xs={12} md={8} lg={6} xl={4}>
+              <ContextMenu comicId={o.id}>
+                <div
+                  className={styles.cover}
+                  style={{ backgroundImage: `url(/server-static/cover/${o.id})` }}
+                />
+              </ContextMenu>
+              <p>{o.title}</p>
+            </Col>
+          ))}
+        </Row>
+      </Card>
+    </React.Fragment>
+  );
+};
 
 const WarpForm = Form.create<PageProps>({
   onValuesChange({ dispatch, history }: PageProps, __, allValues) {
