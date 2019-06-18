@@ -3,6 +3,7 @@ import { join } from 'path';
 
 // ref: https://umijs.org/config/
 const config: IConfig = {
+  history: 'hash',
   treeShaking: true,
   sass: {},
   alias: {
